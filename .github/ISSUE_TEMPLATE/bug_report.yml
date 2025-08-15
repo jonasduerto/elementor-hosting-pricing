@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a problem with the Elementor Hosting Pricing plugin
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: wp
+    attributes:
+      label: WordPress version
+      placeholder: e.g. 6.5.3
+    validations:
+      required: true
+  - type: input
+    id: php
+    attributes:
+      label: PHP version
+      placeholder: e.g. 8.1
+    validations:
+      required: true
+  - type: input
+    id: elementor
+    attributes:
+      label: Elementor version
+      placeholder: e.g. 3.22.0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the issue and expected behavior
+      placeholder: Tell us what you see vs what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Provide steps to reproduce the issue
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See error ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console errors / logs (if any)
+      render: shell
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I am using the latest version of the plugin
+          required: true
+        - label: I have searched existing issues
+          required: true
