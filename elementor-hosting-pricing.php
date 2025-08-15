@@ -3,8 +3,7 @@
  * Plugin Name: Elementor Hosting Pricing
  * Description: A custom Elementor widget for displaying hosting plans with annual/monthly toggles
  * Version: 1.0.0
- * Author: Team Tipihost
- * Author URI: https://tipihost.com
+ * Author: Jonas D
  * Text Domain: elementor-hosting-pricing
  */
 
@@ -36,7 +35,11 @@ final class Elementor_Hosting_Pricing {
     }
 
     public function i18n() {
-        load_plugin_textdomain( 'elementor-hosting-pricing' );
+        load_plugin_textdomain(
+            'elementor-hosting-pricing',
+            false,
+            dirname( plugin_basename( __FILE__ ) ) . '/languages'
+        );
     }
 
     public function init() {

@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Composer / PHP
+vendor/
+composer.lock
+.phpcs-cache
+.phpunit.result.cache
+
+# Build artifacts
+*.map
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Misc
+coverage/

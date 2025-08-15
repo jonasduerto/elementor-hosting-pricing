@@ -1,6 +1,12 @@
 <?php
 /**
  * Elementor Hosting Pricing Widget
+ *
+ * Generic info (editor help):
+ * - Add multiple plans in the "Pricing Plans" repeater. Each plan supports name, subtitle, prices, and CTA.
+ * - Monthly Price vs Annual Price: Annual is the discounted per-month amount when billed yearly.
+ * - Featured Plan highlights one card visually.
+ * - Button URL: Set target and nofollow under the link control options.
  */
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
@@ -79,6 +85,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 'label' => esc_html__('Plan Name', 'elementor-hosting-pricing'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => esc_html__('Website', 'elementor-hosting-pricing'),
+                'description' => esc_html__('Display name of the plan (e.g., Basic, Pro, Business).', 'elementor-hosting-pricing'),
                 'label_block' => true,
             ]
         );
@@ -90,6 +97,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::TEXTAREA,
                 'rows' => 3,
                 'default' => esc_html__('Web Presence: Ideal for those seeking a basic and effective web presence. Start with our standard plan designed for moderate traffic.', 'elementor-hosting-pricing'),
+                'description' => esc_html__('Optional short description below the price. You can use limited HTML for emphasis.', 'elementor-hosting-pricing'),
                 'label_block' => true,
             ]
         );
@@ -101,6 +109,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => '24.99',
                 'step' => '0.01',
+                'description' => esc_html__('The per-month price when billed monthly.', 'elementor-hosting-pricing'),
             ]
         );
 
@@ -111,6 +120,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => '19.99',
                 'step' => '0.01',
+                'description' => esc_html__('Discounted per-month price when billed yearly. The UI multiplies this by 12 for the yearly total.', 'elementor-hosting-pricing'),
             ]
         );
 
@@ -122,6 +132,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 'label' => esc_html__('Button Text', 'elementor-hosting-pricing'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => esc_html__('Order Now', 'elementor-hosting-pricing'),
+                'description' => esc_html__('Call-to-action label for the plan button.', 'elementor-hosting-pricing'),
             ]
         );
 
@@ -136,6 +147,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                     'is_external' => false,
                     'nofollow' => false,
                 ],
+                'description' => esc_html__('Destination link for the CTA button. Use the gear icon to set target and nofollow.', 'elementor-hosting-pricing'),
             ]
         );
 
@@ -148,6 +160,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 'label_off' => esc_html__('No', 'elementor-hosting-pricing'),
                 'return_value' => 'yes',
                 'default' => '',
+                'description' => esc_html__('Highlights this plan visually as recommended/popular.', 'elementor-hosting-pricing'),
             ]
         );
 
@@ -158,6 +171,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => esc_html__('Optimize your online presence.', 'elementor-hosting-pricing'),
                 'description' => esc_html__('This text appears below the button', 'elementor-hosting-pricing'),
+                'label_block' => true,
             ]
         );
 
@@ -469,15 +483,15 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
         $settings = $this->get_settings_for_display();
         ?>
         <div class="hosting-pricing-widget">
-            <div class="hosting-billing-toggle">
-                <span class="hosting-billing-option active" data-billing="monthly">
+            <div class="hosting-billing-toggle" data-billing="monthly">
+                <span class="hosting-billing-option active" data-billing="monthly" role="button" aria-pressed="true" tabindex="0">
                     <?php esc_html_e('Monthly', 'elementor-hosting-pricing'); ?>
                 </span>
                 <label class="hosting-switch">
-                    <input type="checkbox" class="hosting-billing-toggle-input">
+                    <input type="checkbox" class="hosting-billing-toggle-input" aria-label="<?php echo esc_attr__('Toggle billing cycle', 'elementor-hosting-pricing'); ?>">
                     <span class="hosting-slider"></span>
                 </label>
-                <span class="hosting-billing-option" data-billing="annual">
+                <span class="hosting-billing-option" data-billing="annual" role="button" aria-pressed="false" tabindex="0">
                     <?php esc_html_e('Annual (Save 20%)', 'elementor-hosting-pricing'); ?>
                 </span>
             </div>
@@ -510,12 +524,12 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                             <div class="hosting-price-prefix"><?php esc_html_e('From', 'elementor-hosting-pricing'); ?></div>
                             <div class="hosting-price monthly-price active">
                                 <span class="hosting-price-currency">$</span>
-                                <span class="hosting-price-amount"><?php echo esc_html(number_format($plan['monthly_price'], 2)); ?></span>
+                                <span class="hosting-price-amount"><?php echo esc_html(number_format((float) $plan['monthly_price'], 2)); ?></span>
                                 <span class="hosting-billing-cycle">/mo</span>
                             </div>
                             <div class="hosting-price annual-price">
                                 <span class="hosting-price-currency">$</span>
-                                <span class="hosting-price-amount"><?php echo esc_html(number_format($plan['annual_price'], 2)); ?></span>
+                                <span class="hosting-price-amount"><?php echo esc_html(number_format((float) $plan['annual_price'], 2)); ?></span>
                                 <span class="hosting-billing-cycle">/mo</span>
                             </div>
                         </div>
@@ -523,14 +537,14 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                             <?php 
                             printf(
                                 esc_html__('Billed as $%s per year', 'elementor-hosting-pricing'),
-                                '<span class="hosting-billed-amount">' . esc_html(number_format($annual_total, 2)) . '</span>'
+                                '<span class="hosting-billed-amount">' . esc_html(number_format((float) $annual_total, 2)) . '</span>'
                             );
                             ?>
                             <div class="hosting-annual-savings">
                                 <?php
                                 printf(
                                     esc_html__('Save $%s/year', 'elementor-hosting-pricing'),
-                                    '<span class="hosting-savings-amount">' . esc_html(number_format($savings, 2)) . '</span>'
+                                    '<span class="hosting-savings-amount">' . esc_html(number_format((float) $savings, 2)) . '</span>'
                                 );
                                 ?>
                             </div>

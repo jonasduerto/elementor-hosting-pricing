@@ -1,0 +1,63 @@
+name: CI and Release
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  phplint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Find PHP files
+        id: list
+        run: |
+          PHP_FILES=$(git ls-files '*.php')
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$PHP_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Lint
+        if: steps.list.outputs.files != ''
+        run: |
+          echo "$FILES" | while read -r file; do php -l "$file"; done
+        env:
+          FILES: ${{ steps.list.outputs.files }}
+
+  release:
+    name: Build and Attach ZIP
+    if: github.event_name == 'release' && github.event.action == 'created'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build ZIP package
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          PKG_NAME="elementor-hosting-pricing-${TAG_NAME}.zip"
+          zip -r "$PKG_NAME" \
+            elementor-hosting-pricing.php \
+            widgets/ \
+            assets/ \
+            languages/ \
+            README.md \
+            LICENSE \
+            CHANGELOG.md \
+            -x "*.DS_Store" -x "*.git*" -x "*.zip" -x "node_modules/*" -x ".github/*"
+          echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+            files: ${{ env.PKG_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
