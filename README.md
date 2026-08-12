@@ -87,3 +87,4 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ## License
 MIT. See [LICENSE](./LICENSE).
+
