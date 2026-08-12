@@ -77,6 +77,114 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
         );
 
 
+        $this->add_control(
+            'currency_symbol',
+            [
+                'label' => esc_html__('Currency Symbol', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => '$',
+                'description' => esc_html__('Symbol shown next to every price (e.g. $, €, £, MXN).', 'elementor-hosting-pricing'),
+            ]
+        );
+
+        $this->add_control(
+            'currency_position',
+            [
+                'label' => esc_html__('Currency Position', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'before',
+                'options' => [
+                    'before' => esc_html__('Before price ($9.99)', 'elementor-hosting-pricing'),
+                    'after' => esc_html__('After price (9.99€)', 'elementor-hosting-pricing'),
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'price_decimals',
+            [
+                'label' => esc_html__('Decimals', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'default' => 2,
+                'min' => 0,
+                'max' => 4,
+                'description' => esc_html__('Number of decimals used to display prices.', 'elementor-hosting-pricing'),
+            ]
+        );
+
+        $this->add_control(
+            'price_prefix_text',
+            [
+                'label' => esc_html__('Price Prefix', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => esc_html__('From', 'elementor-hosting-pricing'),
+                'description' => esc_html__('Small text above the price. Leave empty to hide it.', 'elementor-hosting-pricing'),
+            ]
+        );
+
+        $this->add_control(
+            'period_label',
+            [
+                'label' => esc_html__('Period Label', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => '/mo',
+                'description' => esc_html__('Suffix after the price, e.g. /mo, /month, /mes.', 'elementor-hosting-pricing'),
+            ]
+        );
+
+        $this->add_control(
+            'show_toggle',
+            [
+                'label' => esc_html__('Show Billing Toggle', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'return_value' => 'yes',
+                'default' => 'yes',
+            ]
+        );
+
+        $this->add_control(
+            'default_billing',
+            [
+                'label' => esc_html__('Default Billing Cycle', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'monthly',
+                'options' => [
+                    'monthly' => esc_html__('Monthly', 'elementor-hosting-pricing'),
+                    'annual' => esc_html__('Annual', 'elementor-hosting-pricing'),
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'monthly_label',
+            [
+                'label' => esc_html__('Monthly Label', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => esc_html__('Monthly', 'elementor-hosting-pricing'),
+                'condition' => [ 'show_toggle' => 'yes' ],
+            ]
+        );
+
+        $this->add_control(
+            'annual_label',
+            [
+                'label' => esc_html__('Annual Label', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => esc_html__('Annual (Save 20%)', 'elementor-hosting-pricing'),
+                'condition' => [ 'show_toggle' => 'yes' ],
+            ]
+        );
+
+        $this->add_control(
+            'badge_text',
+            [
+                'label' => esc_html__('Featured Badge Text', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => esc_html__('Popular', 'elementor-hosting-pricing'),
+                'description' => esc_html__('Ribbon label shown on the featured plan.', 'elementor-hosting-pricing'),
+            ]
+        );
+
         $repeater = new \Elementor\Repeater();
 
         $repeater->add_control(
@@ -125,6 +233,18 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
         );
 
 
+
+        $repeater->add_control(
+            'features',
+            [
+                'label' => esc_html__('Features', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::TEXTAREA,
+                'rows' => 6,
+                'default' => '',
+                'description' => esc_html__('One feature per line. Rendered as a checked list. Leave empty to hide.', 'elementor-hosting-pricing'),
+                'label_block' => true,
+            ]
+        );
 
         $repeater->add_control(
             'button_text',
@@ -477,31 +597,72 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
     }
 
     /**
+     * Split a textarea value into a clean list of feature lines.
+     *
+     * @param string $raw Raw textarea content.
+     * @return array
+     */
+    protected function get_feature_lines( $raw ) {
+        if ( empty( $raw ) ) {
+            return [];
+        }
+
+        $lines = preg_split( '/\r\n|\r|\n/', $raw );
+
+        return array_values( array_filter( array_map( 'trim', $lines ), 'strlen' ) );
+    }
+
+    /**
+     * Format a price with the configured decimals.
+     *
+     * @param mixed $value    Raw price.
+     * @param int   $decimals Decimals to keep.
+     * @return string
+     */
+    protected function format_price( $value, $decimals ) {
+        return number_format( (float) $value, max( 0, (int) $decimals ), '.', '' );
+    }
+
+    /**
      * Render widget output on the frontend.
      */
     protected function render() {
-        $settings = $this->get_settings_for_display();
+        $settings  = $this->get_settings_for_display();
+        $currency  = isset( $settings['currency_symbol'] ) && '' !== $settings['currency_symbol'] ? $settings['currency_symbol'] : '$';
+        $position  = 'after' === ( $settings['currency_position'] ?? 'before' ) ? 'after' : 'before';
+        $decimals  = isset( $settings['price_decimals'] ) && '' !== $settings['price_decimals'] ? (int) $settings['price_decimals'] : 2;
+        $period    = $settings['period_label'] ?? '/mo';
+        $prefix    = $settings['price_prefix_text'] ?? esc_html__( 'From', 'elementor-hosting-pricing' );
+        $badge     = $settings['badge_text'] ?? esc_html__( 'Popular', 'elementor-hosting-pricing' );
+        $billing   = 'annual' === ( $settings['default_billing'] ?? 'monthly' ) ? 'annual' : 'monthly';
+        $is_annual = 'annual' === $billing;
         ?>
-        <div class="hosting-pricing-widget">
-            <div class="hosting-billing-toggle" data-billing="monthly">
-                <span class="hosting-billing-option active" data-billing="monthly" role="button" aria-pressed="true" tabindex="0">
-                    <?php esc_html_e('Monthly', 'elementor-hosting-pricing'); ?>
+        <div class="hosting-pricing-widget"
+             data-currency="<?php echo esc_attr( $currency ); ?>"
+             data-currency-position="<?php echo esc_attr( $position ); ?>"
+             data-decimals="<?php echo esc_attr( $decimals ); ?>"
+             data-period="<?php echo esc_attr( $period ); ?>">
+            <?php if ( 'yes' === ( $settings['show_toggle'] ?? 'yes' ) ) : ?>
+            <div class="hosting-billing-toggle" data-billing="<?php echo esc_attr( $billing ); ?>">
+                <span class="hosting-billing-option<?php echo $is_annual ? '' : ' active'; ?>" data-billing="monthly" role="button" aria-pressed="<?php echo $is_annual ? 'false' : 'true'; ?>" tabindex="0">
+                    <?php echo esc_html( $settings['monthly_label'] ?? __( 'Monthly', 'elementor-hosting-pricing' ) ); ?>
                 </span>
                 <label class="hosting-switch">
-                    <input type="checkbox" class="hosting-billing-toggle-input" aria-label="<?php echo esc_attr__('Toggle billing cycle', 'elementor-hosting-pricing'); ?>">
+                    <input type="checkbox" class="hosting-billing-toggle-input" <?php checked( $is_annual ); ?> aria-label="<?php echo esc_attr__('Toggle billing cycle', 'elementor-hosting-pricing'); ?>">
                     <span class="hosting-slider"></span>
                 </label>
-                <span class="hosting-billing-option" data-billing="annual" role="button" aria-pressed="false" tabindex="0">
-                    <?php esc_html_e('Annual (Save 20%)', 'elementor-hosting-pricing'); ?>
+                <span class="hosting-billing-option<?php echo $is_annual ? ' active' : ''; ?>" data-billing="annual" role="button" aria-pressed="<?php echo $is_annual ? 'true' : 'false'; ?>" tabindex="0">
+                    <?php echo esc_html( $settings['annual_label'] ?? __( 'Annual (Save 20%)', 'elementor-hosting-pricing' ) ); ?>
                 </span>
             </div>
+            <?php endif; ?>
 
             <div class="hosting-pricing-plans">
-                <?php 
-                $plans = $settings['plans'];
-                
-                foreach ($plans as $plan) : 
-                    $is_featured = 'yes' === $plan['featured'] ? 'featured' : '';
+                <?php
+                $plans = is_array( $settings['plans'] ) ? $settings['plans'] : [];
+
+                foreach ($plans as $plan) :
+                    $is_featured = ! empty( $plan['featured'] ) && 'yes' === $plan['featured'] ? 'featured' : '';
 
                     
                     // Calculate savings
@@ -512,39 +673,52 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                     <div class="hosting-pricing-plan <?php echo esc_attr($is_featured); ?>" 
                          data-monthly-price="<?php echo esc_attr($plan['monthly_price']); ?>"
                          data-annual-price="<?php echo esc_attr($plan['annual_price']); ?>">
-                        <?php if ($is_featured) : ?>
-                            <div class="hosting-plan-badge"><?php esc_html_e('Popular', 'elementor-hosting-pricing'); ?></div>
+                        <?php if ($is_featured && '' !== $badge) : ?>
+                            <div class="hosting-plan-badge"><?php echo esc_html( $badge ); ?></div>
                         <?php endif; ?>
-                        
+
                         <div class="hosting-plan-header">
                             <h3 class="hosting-plan-name"><?php echo esc_html($plan['plan_name']); ?></h3>
                         </div>
-                        
+
                         <div class="hosting-plan-pricing">
-                            <div class="hosting-price-prefix"><?php esc_html_e('From', 'elementor-hosting-pricing'); ?></div>
-                            <div class="hosting-price monthly-price active">
-                                <span class="hosting-price-currency">$</span>
-                                <span class="hosting-price-amount"><?php echo esc_html(number_format((float) $plan['monthly_price'], 2)); ?></span>
-                                <span class="hosting-billing-cycle">/mo</span>
-                            </div>
-                            <div class="hosting-price annual-price">
-                                <span class="hosting-price-currency">$</span>
-                                <span class="hosting-price-amount"><?php echo esc_html(number_format((float) $plan['annual_price'], 2)); ?></span>
-                                <span class="hosting-billing-cycle">/mo</span>
-                            </div>
+                            <?php if ( '' !== $prefix ) : ?>
+                                <div class="hosting-price-prefix"><?php echo esc_html( $prefix ); ?></div>
+                            <?php endif; ?>
+                            <?php
+                            $price_rows = [
+                                'monthly-price' => $plan['monthly_price'],
+                                'annual-price'  => $plan['annual_price'],
+                            ];
+                            foreach ( $price_rows as $row_class => $row_price ) :
+                                $active = ( 'annual-price' === $row_class ) === $is_annual ? ' active' : '';
+                                ?>
+                                <div class="hosting-price <?php echo esc_attr( $row_class . $active ); ?>">
+                                    <?php if ( 'before' === $position ) : ?>
+                                        <span class="hosting-price-currency"><?php echo esc_html( $currency ); ?></span>
+                                    <?php endif; ?>
+                                    <span class="hosting-price-amount"><?php echo esc_html( $this->format_price( $row_price, $decimals ) ); ?></span>
+                                    <?php if ( 'after' === $position ) : ?>
+                                        <span class="hosting-price-currency hosting-price-currency--after"><?php echo esc_html( $currency ); ?></span>
+                                    <?php endif; ?>
+                                    <span class="hosting-billing-cycle"><?php echo esc_html( $period ); ?></span>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        <div class="hosting-pay-today">
-                            <?php 
+                        <div class="hosting-pay-today"<?php echo $is_annual ? ' style="display:block;"' : ''; ?>>
+                            <?php
                             printf(
-                                esc_html__('Billed as $%s per year', 'elementor-hosting-pricing'),
-                                '<span class="hosting-billed-amount">' . esc_html(number_format((float) $annual_total, 2)) . '</span>'
+                                esc_html__('Billed as %1$s%2$s per year', 'elementor-hosting-pricing'),
+                                esc_html( 'before' === $position ? $currency : '' ),
+                                '<span class="hosting-billed-amount">' . esc_html( $this->format_price( $annual_total, $decimals ) ) . '</span>' . esc_html( 'after' === $position ? $currency : '' )
                             );
                             ?>
-                            <div class="hosting-annual-savings">
+                            <div class="hosting-annual-savings"<?php echo $is_annual ? ' style="display:block;"' : ''; ?>>
                                 <?php
                                 printf(
-                                    esc_html__('Save $%s/year', 'elementor-hosting-pricing'),
-                                    '<span class="hosting-savings-amount">' . esc_html(number_format((float) $savings, 2)) . '</span>'
+                                    esc_html__('Save %1$s%2$s/year', 'elementor-hosting-pricing'),
+                                    esc_html( 'before' === $position ? $currency : '' ),
+                                    '<span class="hosting-savings-amount">' . esc_html( $this->format_price( $savings, $decimals ) ) . '</span>' . esc_html( 'after' === $position ? $currency : '' )
                                 );
                                 ?>
                             </div>
@@ -553,9 +727,17 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                         <?php if (!empty($plan['subtitle'])) : ?>
                             <p class="hosting-plan-subtitle"><?php echo wp_kses_post($plan['subtitle']); ?></p>
                         <?php endif; ?>
-                        
 
-                        <a href="<?php echo esc_url($plan['button_url']['url']); ?>" 
+                        <?php $features = $this->get_feature_lines( $plan['features'] ?? '' ); ?>
+                        <?php if ( ! empty( $features ) ) : ?>
+                            <ul class="hosting-plan-features">
+                                <?php foreach ( $features as $feature ) : ?>
+                                    <li class="hosting-plan-feature"><?php echo wp_kses_post( $feature ); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+
+                        <a href="<?php echo esc_url( $plan['button_url']['url'] ?? '#' ); ?>"
                            class="hosting-button"
                            <?php echo !empty($plan['button_url']['is_external']) ? 'target="_blank"' : ''; ?>
                            <?php echo !empty($plan['button_url']['nofollow']) ? 'rel="nofollow"' : ''; ?>>
@@ -581,60 +763,86 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
         view.addInlineEditingAttributes('title', 'none');
         view.addInlineEditingAttributes('description', 'basic');
         #>
+        <#
+            var currency = settings.currency_symbol || '$';
+            var currencyAfter = 'after' === settings.currency_position;
+            var decimals = '' === settings.price_decimals || undefined === settings.price_decimals ? 2 : parseInt(settings.price_decimals, 10);
+            var period = undefined === settings.period_label ? '/mo' : settings.period_label;
+            var isAnnual = 'annual' === settings.default_billing;
+            var money = function(value) {
+                var amount = (parseFloat(value) || 0).toFixed(decimals);
+                return currencyAfter ? amount + currency : currency + amount;
+            };
+        #>
         <div class="hosting-pricing-widget">
-            <div class="hosting-billing-toggle">
-                <span class="hosting-billing-option active" data-billing="monthly">
-                    <?php esc_html_e('Monthly', 'elementor-hosting-pricing'); ?>
+            <# if ('yes' === settings.show_toggle) { #>
+            <div class="hosting-billing-toggle" data-billing="{{ isAnnual ? 'annual' : 'monthly' }}">
+                <span class="hosting-billing-option {{ isAnnual ? '' : 'active' }}" data-billing="monthly">
+                    {{{ settings.monthly_label }}}
                 </span>
                 <label class="hosting-switch">
                     <input type="checkbox" class="hosting-billing-toggle-input">
                     <span class="hosting-slider"></span>
                 </label>
-                <span class="hosting-billing-option" data-billing="annual">
-                    <?php esc_html_e('Annual (Save 20%)', 'elementor-hosting-pricing'); ?>
+                <span class="hosting-billing-option {{ isAnnual ? 'active' : '' }}" data-billing="annual">
+                    {{{ settings.annual_label }}}
                 </span>
             </div>
+            <# } #>
 
             <div class="hosting-pricing-plans">
-                <# _.each(settings.plans, function(plan) { 
+                <# _.each(settings.plans, function(plan) {
                     var is_featured = 'yes' === plan.featured ? 'featured' : '';
-                    
+
                     // Calculate savings
                     var monthly_total = parseFloat(plan.monthly_price) * 12;
                     var annual_total = parseFloat(plan.annual_price) * 12;
                     var savings = monthly_total - annual_total;
+                    var features = (plan.features || '').split('\n').map(function(line) { return line.trim(); }).filter(Boolean);
                     #>
                     <div class="hosting-pricing-plan {{{ is_featured }}}">
-                        <# if (is_featured) { #>
-                            <div class="hosting-plan-badge"><?php esc_html_e('Popular', 'elementor-hosting-pricing'); ?></div>
+                        <# if (is_featured && settings.badge_text) { #>
+                            <div class="hosting-plan-badge">{{{ settings.badge_text }}}</div>
                         <# } #>
-                        
+
                         <div class="hosting-plan-header">
                             <h3 class="hosting-plan-name">{{{ plan.plan_name }}}</h3>
                         </div>
 
                         <div class="hosting-plan-pricing">
-                            <div class="hosting-price-prefix"><?php esc_html_e('From', 'elementor-hosting-pricing'); ?></div>
-                            <div class="hosting-price monthly-price active">
-                                <span class="hosting-price-currency">$</span>
-                                <span class="hosting-price-amount">{{{ Number(plan.monthly_price).toFixed(2) }}}</span>
-                                <span class="hosting-billing-cycle">/mo</span>
+                            <# if (settings.price_prefix_text) { #>
+                                <div class="hosting-price-prefix">{{{ settings.price_prefix_text }}}</div>
+                            <# } #>
+                            <div class="hosting-price monthly-price {{ isAnnual ? '' : 'active' }}">
+                                <# if (!currencyAfter) { #><span class="hosting-price-currency">{{{ currency }}}</span><# } #>
+                                <span class="hosting-price-amount">{{{ (parseFloat(plan.monthly_price) || 0).toFixed(decimals) }}}</span>
+                                <# if (currencyAfter) { #><span class="hosting-price-currency hosting-price-currency--after">{{{ currency }}}</span><# } #>
+                                <span class="hosting-billing-cycle">{{{ period }}}</span>
                             </div>
-                            <div class="hosting-price annual-price">
-                                <span class="hosting-price-currency">$</span>
-                                <span class="hosting-price-amount">{{{ Number(plan.annual_price).toFixed(2) }}}</span>
-                                <span class="hosting-billing-cycle">/mo</span>
+                            <div class="hosting-price annual-price {{ isAnnual ? 'active' : '' }}">
+                                <# if (!currencyAfter) { #><span class="hosting-price-currency">{{{ currency }}}</span><# } #>
+                                <span class="hosting-price-amount">{{{ (parseFloat(plan.annual_price) || 0).toFixed(decimals) }}}</span>
+                                <# if (currencyAfter) { #><span class="hosting-price-currency hosting-price-currency--after">{{{ currency }}}</span><# } #>
+                                <span class="hosting-billing-cycle">{{{ period }}}</span>
                             </div>
                         </div>
-                        <div class="hosting-pay-today">
-                            <?php printf(esc_html__('Billed as $%s per year', 'elementor-hosting-pricing'), '{{{ (parseFloat(plan.annual_price) * 12).toFixed(2) }}}'); ?>
-                            <div class="hosting-annual-savings">
-                                <?php printf(esc_html__('Save $%s/year', 'elementor-hosting-pricing'), '{{{ (savings).toFixed(2) }}}'); ?>
+                        <div class="hosting-pay-today" style="display:{{ isAnnual ? 'block' : 'none' }};">
+                            <?php printf(esc_html__('Billed as %s per year', 'elementor-hosting-pricing'), '{{{ money(annual_total) }}}'); ?>
+                            <div class="hosting-annual-savings" style="display:{{ isAnnual ? 'block' : 'none' }};">
+                                <?php printf(esc_html__('Save %s/year', 'elementor-hosting-pricing'), '{{{ money(savings) }}}'); ?>
                             </div>
                         </div>
 
                         <# if (plan.subtitle) { #>
                             <p class="hosting-plan-subtitle">{{{ plan.subtitle }}}</p>
+                        <# } #>
+
+                        <# if (features.length) { #>
+                            <ul class="hosting-plan-features">
+                                <# _.each(features, function(feature) { #>
+                                    <li class="hosting-plan-feature">{{{ feature }}}</li>
+                                <# }); #>
+                            </ul>
                         <# } #>
 
 
