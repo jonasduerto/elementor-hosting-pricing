@@ -11,6 +11,8 @@
     --text-color: #2a363f; /* Body Text */
     --border-color: #e9e9e9;
     --white-color: #fff;
+    --text-muted: #6b7780; /* Secondary text (prefix, billing cycle) */
+    --light-color: #f7f8f9; /* Subtle backgrounds */
     --box-shadow-light: 0 4px 15px rgba(0, 0, 0, 0.05);
     --box-shadow-hover: 3px 3px 10px 0px rgba(0, 0, 0, 0.2);
     --transition: all 0.3s ease-in-out;
@@ -439,101 +441,67 @@
     animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* Title Styling */
-.pricing-title {
-    text-align: center;
-    color: #333;
-    margin-bottom: 30px;
+/* ====== Accessibility ====== */
+.hosting-billing-option:focus-visible,
+.hosting-button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
 }
 
-/* Billing Toggle */
-.billing-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 40px;
-    gap: 15px;
+.hosting-billing-toggle-input:focus-visible + .hosting-slider {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
-.billing-option {
-    font-size: 16px;
-    font-weight: 500;
-    color: #666;
-    transition: color 0.3s ease;
-    cursor: pointer;
-}
-
-.billing-option.active {
-    color: #2271b1;
-    font-weight: 600;
-}
-
-/* Toggle Switch */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 30px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
+/* Screen-reader only helper */
+.hosting-sr-only {
     position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background-color: #2271b1;
-}
-
-input:focus + .slider {
-    box-shadow: 0 0 1px #2271b1;
-}
-
-input:checked + .slider:before {
-    transform: translateX(30px);
-}
-
-/* Pricing Plans Grid */
-.pricing-plans {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 20px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .pricing-plans {
-        grid-template-columns: 1fr;
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+    .hosting-pricing-widget *,
+    .hosting-pricing-widget *::before,
+    .hosting-pricing-widget *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
-    
-    .billing-toggle {
-        flex-direction: column;
-        align-items: center;
+
+    .hosting-pricing-plan:hover,
+    .hosting-button:hover {
+        transform: none;
+    }
+}
+
+/* ====== Dark Mode ====== */
+@media (prefers-color-scheme: dark) {
+    .hosting-pricing-widget:not(.hosting-force-light) {
+        --dark-color: #f2f5f7;
+        --text-color: #c7d0d8;
+        --border-color: #2c3843;
+        --white-color: #161d24;
+        color: var(--text-color);
+    }
+
+    .hosting-pricing-widget:not(.hosting-force-light) .hosting-billing-toggle {
+        background: #1d262e;
+        border-color: #2c3843;
+    }
+
+    .hosting-pricing-widget:not(.hosting-force-light) .hosting-billing-option {
+        color: #9aa7b2;
+    }
+
+    .hosting-pricing-widget:not(.hosting-force-light) .hosting-pay-today {
+        background: #1d262e;
     }
 }

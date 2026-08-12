@@ -185,6 +185,19 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'remember_billing',
+            [
+                'label' => esc_html__('Remember Visitor Choice', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => esc_html__('Yes', 'elementor-hosting-pricing'),
+                'label_off' => esc_html__('No', 'elementor-hosting-pricing'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+                'description' => esc_html__('Stores the selected billing cycle in the browser so it is kept across pages.', 'elementor-hosting-pricing'),
+            ]
+        );
+
         $repeater = new \Elementor\Repeater();
 
         $repeater->add_control(
@@ -829,14 +842,18 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
         $badge     = $settings['badge_text'] ?? esc_html__( 'Popular', 'elementor-hosting-pricing' );
         $billing   = 'annual' === ( $settings['default_billing'] ?? 'monthly' ) ? 'annual' : 'monthly';
         $is_annual = 'annual' === $billing;
+        $remember  = 'no' === ( $settings['remember_billing'] ?? 'yes' ) ? 'no' : 'yes';
         ?>
         <div class="hosting-pricing-widget"
              data-currency="<?php echo esc_attr( $currency ); ?>"
              data-currency-position="<?php echo esc_attr( $position ); ?>"
              data-decimals="<?php echo esc_attr( $decimals ); ?>"
-             data-period="<?php echo esc_attr( $period ); ?>">
+             data-period="<?php echo esc_attr( $period ); ?>"
+             data-remember="<?php echo esc_attr( $remember ); ?>"
+             data-monthly-announce="<?php echo esc_attr__( 'Monthly billing selected', 'elementor-hosting-pricing' ); ?>"
+             data-annual-announce="<?php echo esc_attr__( 'Annual billing selected', 'elementor-hosting-pricing' ); ?>">
             <?php if ( 'yes' === ( $settings['show_toggle'] ?? 'yes' ) ) : ?>
-            <div class="hosting-billing-toggle" data-billing="<?php echo esc_attr( $billing ); ?>">
+            <div class="hosting-billing-toggle" data-billing="<?php echo esc_attr( $billing ); ?>" role="group" aria-label="<?php echo esc_attr__( 'Billing cycle', 'elementor-hosting-pricing' ); ?>">
                 <span class="hosting-billing-option<?php echo $is_annual ? '' : ' active'; ?>" data-billing="monthly" role="button" aria-pressed="<?php echo $is_annual ? 'false' : 'true'; ?>" tabindex="0">
                     <?php echo esc_html( $settings['monthly_label'] ?? __( 'Monthly', 'elementor-hosting-pricing' ) ); ?>
                 </span>
@@ -849,6 +866,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                 </span>
             </div>
             <?php endif; ?>
+            <p class="hosting-billing-status hosting-sr-only" role="status" aria-live="polite"></p>
 
             <div class="hosting-pricing-plans">
                 <?php
