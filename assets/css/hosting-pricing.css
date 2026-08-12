@@ -92,8 +92,9 @@
 
 /* Pricing Cards Grid */
 .hosting-pricing-plans {
-    display: flex;
-    flex-wrap: wrap;
+    --hp-columns: 3;
+    display: grid;
+    grid-template-columns: repeat(var(--hp-columns), minmax(0, 1fr));
     gap: 30px;
     margin-top: 40px;
     align-items: stretch; /* Make cards equal height */
@@ -111,21 +112,39 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    flex-basis: calc(33.333% - 20px);
-    flex-grow: 1;
+    min-width: 0;
 }
 
-.hosting-pricing-plan:hover {
+/* Hover effects (selected from the Layout style tab) */
+.hp-hover-lift .hosting-pricing-plan:hover,
+.elementor-widget-hosting_pricing:not([class*="hp-hover-"]) .hosting-pricing-plan:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
 }
 
+.hp-hover-zoom .hosting-pricing-plan:hover {
+    transform: scale(1.03);
+    box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+}
+
+/* Keep the featured scale while hovering */
+.hp-hover-lift .hosting-pricing-plan.featured:hover,
+.elementor-widget-hosting_pricing:not([class*="hp-hover-"]) .hosting-pricing-plan.featured:hover {
+    transform: scale(var(--hp-featured-scale)) translateY(-5px);
+}
+
+.hp-hover-zoom .hosting-pricing-plan.featured:hover {
+    transform: scale(calc(var(--hp-featured-scale) * 1.03));
+}
+
 /* Featured Plan */
 .hosting-pricing-plan.featured {
+    --hp-featured-scale: 1;
     border: 1px solid var(--primary-color);
     box-shadow: 0 10px 30px rgba(134, 199, 36, 0.2);
     position: relative;
     z-index: 1;
+    transform: scale(var(--hp-featured-scale));
 }
 
 .hosting-plan-badge {
@@ -307,14 +326,14 @@
 
 /* Responsive Styles */
 @media (max-width: 992px) {
-    .hosting-pricing-plan {
-        flex-basis: calc(50% - 15px); /* 2 columns */
+    .hosting-pricing-plans {
+        --hp-columns: 2;
     }
 }
 
 @media (max-width: 768px) {
-    .hosting-pricing-plan {
-        flex-basis: 100%; /* 1 column */
+    .hosting-pricing-plans {
+        --hp-columns: 1;
     }
 
     .hosting-plan-badge {

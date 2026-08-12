@@ -222,6 +222,199 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
      * Register style controls.
      */
     protected function register_style_controls() {
+        // Layout
+        $this->start_controls_section(
+            'section_layout_style',
+            [
+                'label' => esc_html__('Layout', 'elementor-hosting-pricing'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->add_responsive_control(
+            'columns',
+            [
+                'label' => esc_html__('Columns', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '3',
+                'tablet_default' => '2',
+                'mobile_default' => '1',
+                'options' => [
+                    '1' => '1',
+                    '2' => '2',
+                    '3' => '3',
+                    '4' => '4',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .hosting-pricing-plans' => '--hp-columns: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'plans_gap',
+            [
+                'label' => esc_html__('Gap', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px', 'em', 'rem' ],
+                'range' => [
+                    'px' => [ 'min' => 0, 'max' => 80 ],
+                ],
+                'default' => [ 'unit' => 'px', 'size' => 30 ],
+                'selectors' => [
+                    '{{WRAPPER}} .hosting-pricing-plans' => 'gap: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'plans_align',
+            [
+                'label' => esc_html__('Card Alignment', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => esc_html__('Left', 'elementor-hosting-pricing'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => esc_html__('Center', 'elementor-hosting-pricing'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => esc_html__('Right', 'elementor-hosting-pricing'),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+                'default' => 'center',
+                'selectors' => [
+                    '{{WRAPPER}} .hosting-pricing-plan' => 'text-align: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'plan_padding',
+            [
+                'label' => esc_html__('Card Padding', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => [ 'px', 'em', '%' ],
+                'selectors' => [
+                    '{{WRAPPER}} .hosting-pricing-plan' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'plan_border_radius',
+            [
+                'label' => esc_html__('Card Border Radius', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => [ 'px', '%' ],
+                'selectors' => [
+                    '{{WRAPPER}} .hosting-pricing-plan' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'plan_border_width',
+            [
+                'label' => esc_html__('Card Border Width', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [ 'px' => [ 'min' => 0, 'max' => 10 ] ],
+                'selectors' => [
+                    '{{WRAPPER}} .hosting-pricing-plan' => 'border-width: {{SIZE}}px;',
+                ],
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'plan_box_shadow',
+                'selector' => '{{WRAPPER}} .hosting-pricing-plan',
+            ]
+        );
+
+        $this->add_control(
+            'hover_effect',
+            [
+                'label' => esc_html__('Hover Effect', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'lift',
+                'options' => [
+                    'lift' => esc_html__('Lift', 'elementor-hosting-pricing'),
+                    'zoom' => esc_html__('Zoom', 'elementor-hosting-pricing'),
+                    'none' => esc_html__('None', 'elementor-hosting-pricing'),
+                ],
+                'prefix_class' => 'hp-hover-',
+            ]
+        );
+
+        $this->add_control(
+            'featured_scale',
+            [
+                'label' => esc_html__('Featured Plan Scale', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'range' => [ 'px' => [ 'min' => 1, 'max' => 1.2, 'step' => 0.01 ] ],
+                'default' => [ 'size' => 1 ],
+                'selectors' => [
+                    '{{WRAPPER}} .hosting-pricing-plan.featured' => '--hp-featured-scale: {{SIZE}};',
+                ],
+                'description' => esc_html__('Slightly enlarge the featured card to make it stand out.', 'elementor-hosting-pricing'),
+            ]
+        );
+
+        $this->end_controls_section();
+
+        // Typography
+        $this->start_controls_section(
+            'section_typography_style',
+            [
+                'label' => esc_html__('Typography', 'elementor-hosting-pricing'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'plan_name_typography',
+                'label' => esc_html__('Plan Name', 'elementor-hosting-pricing'),
+                'selector' => '{{WRAPPER}} .hosting-plan-name',
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'plan_subtitle_typography',
+                'label' => esc_html__('Subtitle', 'elementor-hosting-pricing'),
+                'selector' => '{{WRAPPER}} .hosting-plan-subtitle',
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'price_typography',
+                'label' => esc_html__('Price', 'elementor-hosting-pricing'),
+                'selector' => '{{WRAPPER}} .hosting-price-amount',
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'button_typography',
+                'label' => esc_html__('Button', 'elementor-hosting-pricing'),
+                'selector' => '{{WRAPPER}} .hosting-button',
+            ]
+        );
+
+        $this->end_controls_section();
+
         // Toggle Style
         $this->start_controls_section(
             'section_toggle_style',
