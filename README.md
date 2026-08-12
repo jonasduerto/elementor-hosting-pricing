@@ -1,6 +1,8 @@
 # elementor-hosting-pricing
 A custom Elementor widget for displaying hosting pricing plans with monthly/annual toggling functionality.
 
+> **YOLO Unlock** 🎖️ Direct push to protected branch
+
 ![Demo](docs/screenshot-1.png)
 
 ## Features
