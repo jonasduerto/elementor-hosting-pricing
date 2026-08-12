@@ -26,15 +26,49 @@ jQuery(function($) {
                 billingCycle: '.hosting-billing-cycle'
             };
 
+            // Clave de almacenamiento para recordar la elección del visitante
+            this.storageKey = 'hostingPricing:billing';
+            this.remember = 'no' !== this.$root.attr('data-remember');
+
             this.init();
+        }
+
+        /**
+         * Lee la preferencia guardada. Devuelve null si no existe o no hay acceso.
+         */
+        readStoredBilling() {
+            if (!this.remember) {
+                return null;
+            }
+
+            try {
+                const stored = window.localStorage.getItem(this.storageKey);
+                return 'annual' === stored || 'monthly' === stored ? stored : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        storeBilling(isAnnual) {
+            if (!this.remember) {
+                return;
+            }
+
+            try {
+                window.localStorage.setItem(this.storageKey, isAnnual ? 'annual' : 'monthly');
+            } catch (e) {
+                // El almacenamiento puede estar bloqueado (modo privado): se ignora.
+            }
         }
 
         init() {
             this.cacheElements();
             this.bindEvents();
-            // Estado inicial desde data o checkbox
-            const dataBilling = this.$toggleContainer.attr('data-billing');
+            // Estado inicial: preferencia guardada > data del contenedor > checkbox
+            const stored = this.readStoredBilling();
+            const dataBilling = stored || this.$toggleContainer.attr('data-billing');
             const isAnnual = dataBilling ? dataBilling === 'annual' : this.$toggleCheckbox.is(':checked');
+            this.$toggleContainer.attr('data-billing', isAnnual ? 'annual' : 'monthly');
             this.updatePrices(!!isAnnual);
             this.syncToggleUI(!!isAnnual);
         }
@@ -62,16 +96,20 @@ jQuery(function($) {
                 this.syncToggleUI(isAnnual);
             });
 
-            // Teclado en opciones
+            // Teclado en opciones: Enter/Espacio activan, flechas alternan ciclo
             this.$options.attr('tabindex', 0).on('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     $(e.currentTarget).trigger('click');
+                    return;
+                }
+
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    const target = e.key === 'ArrowRight' ? 'annual' : 'monthly';
+                    this.$options.filter(`[data-billing="${target}"]`).trigger('click').trigger('focus');
                 }
             });
-
-            // Manejar redimensionamiento para ajustes responsivos
-            $(window).on('resize', this.handleResize.bind(this));
         }
 
         syncToggleUI(isAnnual) {
@@ -96,10 +134,6 @@ jQuery(function($) {
 
             // Actualizar precios
             this.updatePrices(isAnnual);
-        }
-
-        handleResize() {
-            // Puedes agregar lógica de redimensionamiento aquí si es necesario
         }
 
         updatePrices(isAnnual) {
@@ -140,7 +174,15 @@ jQuery(function($) {
                 }
             });
 
+            // Guardar la elección y anunciarla a lectores de pantalla
+            this.storeBilling(isAnnual);
+            this.$root.find('.hosting-billing-status').text(
+                isAnnual ? this.$root.data('annual-announce') || 'Annual billing selected'
+                         : this.$root.data('monthly-announce') || 'Monthly billing selected'
+            );
+
             // Disparar evento personalizado para cualquier funcionalidad adicional
+            this.$root.trigger('hostingPricing:updated', { isAnnual });
             $(document).trigger('hostingPricing:updated', { isAnnual });
         }
     }

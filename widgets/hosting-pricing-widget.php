@@ -77,6 +77,19 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
         );
 
 
+        $this->add_control(
+            'remember_billing',
+            [
+                'label' => esc_html__('Remember Visitor Choice', 'elementor-hosting-pricing'),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'label_on' => esc_html__('Yes', 'elementor-hosting-pricing'),
+                'label_off' => esc_html__('No', 'elementor-hosting-pricing'),
+                'return_value' => 'yes',
+                'default' => 'yes',
+                'description' => esc_html__('Stores the selected billing cycle in the browser so it is kept across pages.', 'elementor-hosting-pricing'),
+            ]
+        );
+
         $repeater = new \Elementor\Repeater();
 
         $repeater->add_control(
@@ -481,9 +494,13 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
      */
     protected function render() {
         $settings = $this->get_settings_for_display();
+        $remember = 'no' === ( $settings['remember_billing'] ?? 'yes' ) ? 'no' : 'yes';
         ?>
-        <div class="hosting-pricing-widget">
-            <div class="hosting-billing-toggle" data-billing="monthly">
+        <div class="hosting-pricing-widget"
+             data-remember="<?php echo esc_attr( $remember ); ?>"
+             data-monthly-announce="<?php echo esc_attr__( 'Monthly billing selected', 'elementor-hosting-pricing' ); ?>"
+             data-annual-announce="<?php echo esc_attr__( 'Annual billing selected', 'elementor-hosting-pricing' ); ?>">
+            <div class="hosting-billing-toggle" data-billing="monthly" role="group" aria-label="<?php echo esc_attr__( 'Billing cycle', 'elementor-hosting-pricing' ); ?>">
                 <span class="hosting-billing-option active" data-billing="monthly" role="button" aria-pressed="true" tabindex="0">
                     <?php esc_html_e('Monthly', 'elementor-hosting-pricing'); ?>
                 </span>
@@ -495,6 +512,7 @@ class Elementor_Hosting_Pricing_Widget extends \Elementor\Widget_Base {
                     <?php esc_html_e('Annual (Save 20%)', 'elementor-hosting-pricing'); ?>
                 </span>
             </div>
+            <p class="hosting-billing-status hosting-sr-only" role="status" aria-live="polite"></p>
 
             <div class="hosting-pricing-plans">
                 <?php 
