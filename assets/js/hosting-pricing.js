@@ -26,7 +26,20 @@ jQuery(function($) {
                 billingCycle: '.hosting-billing-cycle'
             };
 
+            // Formato de moneda configurable desde el widget
+            const decimals = parseInt(this.$root.data('decimals'), 10);
+            this.format = {
+                currency: this.$root.data('currency') !== undefined ? String(this.$root.data('currency')) : '$',
+                after: 'after' === this.$root.data('currency-position'),
+                decimals: isNaN(decimals) ? 2 : Math.max(0, Math.min(4, decimals)),
+                period: this.$root.data('period') !== undefined ? String(this.$root.data('period')) : '/mo'
+            };
+
             this.init();
+        }
+
+        amount(value) {
+            return (parseFloat(value) || 0).toFixed(this.format.decimals);
         }
 
         init() {
@@ -108,19 +121,19 @@ jQuery(function($) {
             this.$annualPrices.toggleClass('active', isAnnual);
 
             // Actualizar texto de facturación y ahorros para cada plan
-            this.$root.find('.hosting-pricing-plan').each(function() {
-                const $plan = $(this);
+            this.$root.find('.hosting-pricing-plan').each((index, element) => {
+                const $plan = $(element);
                 const monthlyPrice = parseFloat($plan.data('monthly-price')) || 0;
                 const annualPrice = parseFloat($plan.data('annual-price')) || 0;
 
                 if (isAnnual) {
                     // Modo anual: mostrar precio anual por mes
-                    const annualTotal = (annualPrice * 12).toFixed(2);
-                    const savings = (monthlyPrice * 12 - annualPrice * 12).toFixed(2);
+                    const annualTotal = this.amount(annualPrice * 12);
+                    const savings = this.amount(monthlyPrice * 12 - annualPrice * 12);
 
                     // Actualizar el precio mostrado (precio mensual del plan anual)
-                    $plan.find('.hosting-price-amount').text(annualPrice.toFixed(2));
-                    $plan.find('.hosting-billing-cycle').text('/mo');
+                    $plan.find('.hosting-price-amount').text(this.amount(annualPrice));
+                    $plan.find('.hosting-billing-cycle').text(this.format.period);
 
                     // Actualizar el texto de facturación - más compacto
                     $plan.find('.hosting-billed-amount').text(annualTotal);
@@ -131,8 +144,8 @@ jQuery(function($) {
                     $plan.find('.hosting-annual-savings').show();
                 } else {
                     // Modo mensual: mostrar precio mensual
-                    $plan.find('.hosting-price-amount').text(monthlyPrice.toFixed(2));
-                    $plan.find('.hosting-billing-cycle').text('/mo');
+                    $plan.find('.hosting-price-amount').text(this.amount(monthlyPrice));
+                    $plan.find('.hosting-billing-cycle').text(this.format.period);
 
                     // Ocultar información de facturación anual
                     $plan.find('.hosting-pay-today').hide();

@@ -212,6 +212,11 @@
     letter-spacing: -0.02em;
 }
 
+.hosting-price-currency--after {
+    margin-right: 0;
+    margin-left: 3px;
+}
+
 .hosting-billing-cycle {
     font-size: 1rem;
     color: var(--text-muted);
